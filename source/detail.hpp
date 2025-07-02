@@ -18,7 +18,7 @@
 #include <iomanip>
 #include <atomic>
 
-namespace MLOG{
+namespace MRPC{
     #define LDBG 0
     #define LINF 1
     #define LERR 2
@@ -96,6 +96,5 @@ namespace MLOG{
             return ss.str();
             }
         };
-    };
 }
 
