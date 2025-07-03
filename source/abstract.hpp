@@ -11,7 +11,7 @@ namespace MRPC{
         public:
             using ptr = std::shared_ptr<BaseMessage>;
             //用智能指针来管理消息对象
-            virtual ~BaseMessage();
+            //virtual ~BaseMessage();
             virtual void set_Id(const std::string &id){
                 rid = id;
             }

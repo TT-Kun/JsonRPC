@@ -172,6 +172,7 @@ namespace MRPC{
                     ELOG("服务请求中主机地址信息错误");
                     return false;
                 }
+                return true;
             }
             
             std::string getMethod(){
@@ -184,16 +185,16 @@ namespace MRPC{
             ServiceOpType getOptype(){
                 return (ServiceOpType)_body[KEY_OPTYPE].asInt();
             }
-            void setOptype(TopicOpType optype){
+            void setOptype(ServiceOpType optype){
                 _body[KEY_OPTYPE] = (int)optype;
             }
 
             Address getHost(){
                 Address addr;
-                addr.first = _body[KEY_HOST_IP].asString();
-                addr.second = _body[KEY_HOST_PORT].asInt();
+                addr.first = _body[KEY_HOST][KEY_HOST_IP].asString();  // 先访问host对象，再访问ip字段
+                addr.second = _body[KEY_HOST][KEY_HOST_PORT].asInt();  // 先访问host对象，再访问port字段
                 return addr;
-            } 
+            }
             void setHost(const Address &host){
                 Json::Value val;
                 val[KEY_HOST_IP] = host.first;
@@ -204,6 +205,7 @@ namespace MRPC{
     };
 
     class RpcResponse : public JsonResponse{
+    public:
         using ptr = std::shared_ptr<RpcResponse>;
         virtual bool checkValid() const override{
             if(_body[KEY_RECODE].isNull()==true ||
