@@ -40,7 +40,6 @@ namespace MRPC{
         RCODE_NOT_FOUND_SERVICE,   // RPC服务不存在
         RCODE_INVALID_OPTYPE,      // 无效的Topic操作类型
         RCODE_NOT_FOUND_TOPIC,     // 主题不存在
-        RCODE_INTERNAL_ERROR       // 无效的服务操作类型
     };
     //以上是响应码
 
@@ -54,8 +53,7 @@ namespace MRPC{
             {RCode::RCODE_INVALID_PARAMS, "无效的Rpc参数！"},
             {RCode::RCODE_NOT_FOUND_SERVICE, "没有找到对应的服务！"},
             {RCode::RCODE_INVALID_OPTYPE, "无效的操作类型"},
-            {RCode::RCODE_NOT_FOUND_TOPIC, "没有找到对应的主题！"},
-            {RCode::RCODE_INTERNAL_ERROR, "内部错误！"}
+            {RCode::RCODE_NOT_FOUND_TOPIC, "内部错误！"}
         };
         auto it = error_map.find(code);
         if(it == error_map.end()){
@@ -80,15 +78,15 @@ namespace MRPC{
         TOPIC_SUBSCRIBE,    // 订阅主题
         TOPIC_CANCEL,       // 取消订阅
         TOPIC_PUBLISH,      // 发布主题
-    }
+    };
     //主题操作类型
 
     enum class ServiceOpType{
         SERVICE_REGISTRY = 0,   // 注册服务
-        SERVICE_UNREGISTRY,     // 注销服务
+        SERVICE_DISCOVERY,      // 发现服务
         SERVICE_ONLINE,         // 上线
         SERVICE_OFFLINE,        // 下线
         SERVICE_UNKNOW          // 未知
-    }
+    };
     //主题服务类型
 }

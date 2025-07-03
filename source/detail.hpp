@@ -17,6 +17,7 @@
 #include <jsoncpp/json/json.h>
 #include <iomanip>
 #include <atomic>
+#include <random>
 
 namespace MRPC{
     #define LDBG 0
@@ -91,7 +92,7 @@ namespace MRPC{
 
             for(int i=7; i>=0; i--) {
                 if(i==5)  ss << "-";
-                ss << std::hex << std::setw(2) << std::setfill('0') << std::hex << (cur >> (i*8)) & 0xff;
+                ss << std::setw(2) << std::setfill('0') << std::hex << ((cur >> (i*8)) & 0xFF);
             }
             return ss.str();
             }
