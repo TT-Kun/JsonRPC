@@ -41,7 +41,6 @@ namespace MRPC{
                 //注意muduo库会将网络字节序转换为本地主机字节序
             }
             
-            // 删除缓冲区中前四个字节的内容
             virtual void retrieveInt32() override{
                 return _buffer->retrieveInt32();
                 //取出（删除）缓冲区中前四个字节的内容
@@ -52,7 +51,6 @@ namespace MRPC{
                 return _buffer->readInt32();
             }
             
-            // 从缓冲区读取指定长度的字符串并删除
             virtual std::string retrieveAsString(size_t len) override{
                 return _buffer->retrieveAsString(len);
                 //从缓冲区里面删除len个字节的数据(确定符合条件了，再读取并删除)
@@ -64,11 +62,7 @@ namespace MRPC{
     // 创建缓冲区对象的工厂类
     class BufferFactory{
         public:
-            /**
-             * @brief 创建缓冲区对象
-             * @param args 传递给MuduoBuffer构造函数的参数
-             * @return 指向创建的缓冲区对象的智能指针
-             */
+            // 创建缓冲区对象
             template<typename ...Args>
             static BaseBuffer::ptr create(Args&&...args){
                 return std::make_shared<MuduoBuffer>(std::forward<Args>(args)...);
@@ -216,20 +210,14 @@ namespace MRPC{
             muduo::net::TcpServer::kReusePort),_protocol(ProtocolFactory::create())
             {}
 
-            /**
-             * @brief 启动服务器
-             * 
-             * 设置连接回调和消息回调，启动服务器并开始事件循环
-             */
+            // 设置连接回调和消息回调，启动服务器并开始事件循环
             virtual void start() override{
                 _server.setConnectionCallback(std::bind(&MuduoServer::onConnection, this, std::placeholders::_1));
-                //设置消息回调处理函数
                 _server.setMessageCallback(std::bind(&MuduoServer::onMessage, this, std::placeholders::_1, 
                 std::placeholders::_2, std::placeholders::_3));
                 _server.start();
                 _baseloop.loop();
             }
-            //启动服务器
          
             // 处理连接建立和断开事件。连接建立时创建Connection对象并存入连接表，连接断开时从连接表中移除并通知应用层
             void onConnection(const muduo::net::TcpConnectionPtr &conn){
@@ -439,6 +427,5 @@ namespace MRPC{
                 return std::make_shared<MuduoClient>(std::forward<Args>(args)...);
             }
     };
-    
 
 }
