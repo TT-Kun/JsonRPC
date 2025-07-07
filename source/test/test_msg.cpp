@@ -1,4 +1,4 @@
-#include "../message.hpp"  // 包含消息相关的头文件
+#include "../common/message.hpp"  // 包含消息相关的头文件
 
 int main(){
     // 创建一个RPC请求对象

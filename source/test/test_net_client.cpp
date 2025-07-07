@@ -1,6 +1,6 @@
-#include "../net.hpp"
-#include "../message.hpp"
-#include "../dispatcher.hpp"
+#include "../common/net.hpp"
+#include "../common/message.hpp"
+#include "../common/dispatcher.hpp"
 
 void onRpcResponse(const MRPC::BaseConnection::ptr &conn,const MRPC::BaseMessage::ptr &msg){
     std::cout << "收到了Rpc响应：" << std::endl;

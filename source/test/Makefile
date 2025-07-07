@@ -1,4 +1,4 @@
-CFLAGS= -std=c++11 -Wall -I . -I .. -I ../../build/release-install-cpp11/include
+CFLAGS= -std=c++11 -Wall -I . -I .. -I ../../build/release-install-cpp11/include	
 LFLAGS= -L../../build/release-install-cpp11/lib -ljsoncpp -lmuduo_net -lmuduo_base -pthread
 
 all: test_netserver test_netclient test_msg
