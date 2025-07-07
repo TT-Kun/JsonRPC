@@ -22,7 +22,6 @@
 namespace MRPC{
     /**
      * @brief MuduoBuffer类 - BaseBuffer的具体实现，基于muduo库的Buffer
-     * 
      * 将muduo库的Buffer封装为符合BaseBuffer接口的类，实现网络数据的读取和解析
      * 主要用于处理TCP连接接收到的数据，提供二进制数据到具体数据类型的转换
      */
@@ -30,48 +29,30 @@ namespace MRPC{
         public:
             using ptr = std::shared_ptr<MuduoBuffer>;
             MuduoBuffer(muduo::net::Buffer *buffer):_buffer(buffer){}
-            //不写析构手动释放，因为*_buffer指向connection里对应的缓冲区，它的资源管理不由MuduoBuffer管理
-            
-            /**
-             * @brief 获取缓冲区中可读取的字节数
-             * @return 可读取的字节数
-             */
+            //*_buffer指向connection里对应的缓冲区，它的资源管理不由MuduoBuffer管理，不写析构
+            // 获取缓冲区中可读取的字节数
             virtual size_t readable_size() const override{
                 return _buffer->readableBytes();
-                //返回缓冲区中可读取的字节数
             }
             
-            /**
-             * @brief 查看缓冲区中前四个字节的内容(不删除)
-             * @return 转换为int32_t的值，已处理网络字节序
-             */
+            // 查看缓冲区中前四个字节的内容(不删除)
             virtual int32_t peekInt32() const override{
                 return _buffer->peekInt32();
-                //尝试取出（不删除）缓冲区中前四个字节的内容，用于判断
-                //注意muduo库是一个网络库，会将网络字节序转换为本地主机字节序
+                //注意muduo库会将网络字节序转换为本地主机字节序
             }
             
-            /**
-             * @brief 删除缓冲区中前四个字节的内容
-             */
+            // 删除缓冲区中前四个字节的内容
             virtual void retrieveInt32() override{
                 return _buffer->retrieveInt32();
                 //取出（删除）缓冲区中前四个字节的内容
             }
             
-            /**
-             * @brief 读取并删除缓冲区中前四个字节的内容
-             * @return 转换为int32_t的值，已处理网络字节序
-             */
+            // 读取并删除缓冲区中前四个字节的内容
             virtual int32_t readInt32() const override{
                 return _buffer->readInt32();
             }
             
-            /**
-             * @brief 从缓冲区读取指定长度的字符串并删除
-             * @param len 要读取的字节数
-             * @return 转换为string的数据
-             */
+            // 从缓冲区读取指定长度的字符串并删除
             virtual std::string retrieveAsString(size_t len) override{
                 return _buffer->retrieveAsString(len);
                 //从缓冲区里面删除len个字节的数据(确定符合条件了，再读取并删除)
@@ -80,12 +61,7 @@ namespace MRPC{
             muduo::net::Buffer *_buffer;  // muduo库的缓冲区对象指针
     };
 
-    /**
-     * @brief BufferFactory类 - 创建缓冲区对象的工厂类
-     * 
-     * 用于创建MuduoBuffer对象，提供统一的创建接口
-     * 工厂模式实现，隔离对象创建和使用，提高系统灵活性
-     */
+    // 创建缓冲区对象的工厂类
     class BufferFactory{
         public:
             /**
@@ -99,33 +75,18 @@ namespace MRPC{
             }
     };
 
-    /**
-     * @brief LVProtocol类 - 实现长度-值协议的消息处理
-     * 
-     * 消息格式：|==Length==|==Value==|
-     * 扩展格式：|==Length==|==MType==|==Idlength==|==Id==|==body==|
-     * 
-     * 负责网络消息的编码和解码，实现BaseProtocol接口
-     * 该协议设计解决了TCP粘包和分包问题，能准确识别消息边界
-     */
+    // |==Length==|==MType==|==Idlength==|==Id==|==body==|
     class LVProtocol:public BaseProtocol{
         public:
             using ptr = std::shared_ptr<BaseProtocol>;
             
-            /**
-             * @brief 检查缓冲区中的数据是否足够处理一条完整消息
-             * @param buffer 缓冲区对象
-             * @return 如果数据量足够返回true，否则返回false
-             * 
-             * 首先检查消息长度字段，然后判断缓冲区中是否有足够数据
-             */
+            // 检查缓冲区中的数据是否足够处理一条完整消息。先检查消息长度字段，然后判断缓冲区中是否有足够数据
             virtual bool canProcessed(const BaseBuffer::ptr &buffer) const override
             {
-                    // 首先检查是否有足够的数据读取长度字段
+                // 检查是否有足够的数据读取长度字段
                 if(buffer->readable_size() < fields_len) {
                     return false;
                 }
-
                 //peekInt32()中有一个断言，如果不足四字节会断言失败导致程序崩溃
                 int32_t length = buffer->peekInt32();
                 if(buffer->readable_size() < length+fields_len){
@@ -139,17 +100,16 @@ namespace MRPC{
              * @param buffer 缓冲区对象
              * @param msg 输出参数，存储反序列化后的消息对象
              * @return 处理成功返回true，否则返回false
-             * 
              * 按照协议格式依次解析各个字段，构造对应类型的消息对象
              */
             virtual bool onMessage(const BaseBuffer::ptr &buffer,BaseMessage::ptr &msg) override{
                 //针对接收数据进行处理，默认已判断数据足够用于处理
-                int32_t length = buffer->readInt32();   //读取消息长度
-                MType mtype = (MType)buffer->readInt32();    //读取消息类型
-                int32_t id_len = buffer->readInt32();   //读取消息id长度
-                std::string id_str = buffer->retrieveAsString(id_len); //读取消息id
+                int32_t length = buffer->readInt32();   //消息长度
+                MType mtype = (MType)buffer->readInt32();    //消息类型
+                int32_t id_len = buffer->readInt32();   //消息id长度
+                std::string id_str = buffer->retrieveAsString(id_len); //消息id
                 std::string body = buffer->retrieveAsString(length-fields_len-mtype_len-id_len);
-                //读取消息体
+                //消息体
                 msg = MessageFactory::create(mtype);
                 if (msg.get() == nullptr) {
                     ELOG("消息类型错误，构造消息对象失败！");
@@ -168,9 +128,7 @@ namespace MRPC{
              * @brief 将消息对象序列化为二进制数据
              * @param msg 要序列化的消息对象
              * @return 序列化后的二进制数据字符串
-             * 
              * 序列化格式：|==Length==|==MType==|==Idlength==|==Id==|==body==|
-             * 注意处理网络字节序问题，确保跨平台兼容性
              */
             virtual std::string serialize(const BaseMessage::ptr &msg) const override
             {
@@ -197,12 +155,7 @@ namespace MRPC{
             const size_t id_len = 4;        //存放消息id的字段长度
     };
 
-    /**
-     * @brief ProtocolFactory类 - 创建协议对象的工厂类
-     * 
-     * 工厂模式实现，用于创建LVProtocol对象
-     * 将对象创建与使用分离，便于后续扩展其他协议实现
-     */
+    // 创建协议对象的工厂类
     class ProtocolFactory {
         public:
             template<typename ...Args>
@@ -211,45 +164,24 @@ namespace MRPC{
             }
     };
 
-    /**
-     * @brief MuduoConnection类 - BaseConnection的具体实现
-     * 
-     * 封装muduo库的TcpConnection，实现BaseConnection接口
-     * 负责消息发送、连接管理等功能
-     */
+    // 封装muduo库的TcpConnection，实现BaseConnection接口。负责消息发送、连接管理等功能
     class MuduoConnection:public BaseConnection{
         public:
             using ptr = std::shared_ptr<MuduoConnection>;
-            //用智能指针来管理通信连接对象
             MuduoConnection(muduo::net::TcpConnectionPtr connection,
             BaseProtocol::ptr protocol)
             :_connection(connection),_protocol(protocol){}
-            
-            /**
-             * @brief 发送消息
-             * @param msg 要发送的消息对象
-             * 
-             * 使用协议对象序列化消息，然后通过TCP连接发送
-             */
+            //使用协议对象序列化消息，然后通过TCP连接发送
             virtual void sendMessage(const BaseMessage::ptr &msg) override{
                 //基于protocol的序列化方法，将消息序列化后发送
                 std::string body = _protocol->serialize(msg);
                 _connection->send(body);
             }
             
-            /**
-             * @brief 关闭连接
-             * 
-             * 主动关闭TCP连接
-             */
             virtual void shutdown() override{  
                 _connection->shutdown();
             }
             
-            /**
-             * @brief 检查连接是否正常
-             * @return 连接正常返回true，否则返回false
-             */
             virtual bool connected() override{
                 return _connection->connected();
             }
@@ -258,12 +190,7 @@ namespace MRPC{
             muduo::net::TcpConnectionPtr _connection; // muduo库的连接对象
     };
     
-    /**
-     * @brief ConnectionFactory类 - 创建连接对象的工厂类
-     * 
-     * 工厂模式实现，用于创建MuduoConnection对象
-     * 将连接对象的创建与使用分离，提高系统灵活性
-     */
+    // 创建连接对象的工厂类
     class ConnectionFactory 
     {
         public:
@@ -273,12 +200,7 @@ namespace MRPC{
             }
     };
 
-    /**
-     * @brief MuduoServer类 - BaseServer的具体实现
-     * 
-     * 封装muduo库的TcpServer，实现BaseServer接口
-     * 负责服务器的启动、连接管理、消息处理等功能
-     */
+    // 封装muduo库的TcpServer，实现BaseServer接口。负责服务器的启动、连接管理、消息处理等功能
     class MuduoServer:public BaseServer{
         public:
             using ptr = std::shared_ptr<BaseServer>;
@@ -286,7 +208,6 @@ namespace MRPC{
             /**
              * @brief 构造函数
              * @param port 服务器监听端口
-             * 
              * 初始化TcpServer和协议对象，设置服务器参数
              * 使用kReusePort允许多进程绑定同一端口，提高并发性能
              */
@@ -310,14 +231,7 @@ namespace MRPC{
             }
             //启动服务器
          
-            /**
-             * @brief 连接回调函数
-             * @param conn muduo库的TCP连接对象
-             * 
-             * 处理连接建立和断开事件
-             * 连接建立时创建Connection对象并存入连接表
-             * 连接断开时从连接表中移除并通知应用层
-             */
+            // 处理连接建立和断开事件。连接建立时创建Connection对象并存入连接表，连接断开时从连接表中移除并通知应用层
             void onConnection(const muduo::net::TcpConnectionPtr &conn){
                 if(conn->connected()){
                     std::cout<<"新连接建立"<<std::endl;
@@ -406,12 +320,7 @@ namespace MRPC{
             std::unordered_map<muduo::net::TcpConnectionPtr,BaseConnection::ptr> _connections;  // 连接映射表，关联底层连接和业务连接
     };
 
-    /**
-     * @brief ServerFactory类 - 创建服务器对象的工厂类
-     * 
-     * 工厂模式实现，用于创建MuduoServer对象
-     * 将服务器对象的创建与使用分离，提高系统灵活性
-     */
+    // 创建服务器对象的工厂类
     class ServerFactory {
         public:
             template<typename ...Args>
