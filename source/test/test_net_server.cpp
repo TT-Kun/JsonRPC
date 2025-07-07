@@ -27,9 +27,9 @@ int main(){
 
     auto dispatcher = std::make_shared<MRPC::Dispatcher>();
 
-    dispatcher->registerHandler(MRPC::MType::REQ_RPC,onRpcRequest);
-    dispatcher->registerHandler(MRPC::MType::REQ_TOPIC,onTopicRequest);
-    //注册消息类型和回调之间的映射关系
+    dispatcher->registerHandler<MRPC::RpcRequest>(MRPC::MType::REQ_RPC,onRpcRequest);
+    dispatcher->registerHandler<MRPC::TopicRequest>(MRPC::MType::REQ_TOPIC,onTopicRequest);
+    //注册映射关系
     auto message_cb=std::bind(&MRPC::Dispatcher::onMessage,dispatcher.get(),
     std::placeholders::_1,std::placeholders::_2);
     auto server = MRPC::ServerFactory::create(9000);

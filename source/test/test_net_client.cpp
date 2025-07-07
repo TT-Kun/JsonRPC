@@ -15,8 +15,8 @@ void onTopicResponse(const MRPC::BaseConnection::ptr &conn,const MRPC::BaseMessa
 int main(){
     auto dispatcher = std::make_shared<MRPC::Dispatcher>();
 
-    dispatcher->registerHandler(MRPC::MType::RSP_RPC,onRpcResponse);
-    dispatcher->registerHandler(MRPC::MType::RSP_TOPIC,onTopicResponse);
+    dispatcher->registerHandler<MRPC::RpcResponse>(MRPC::MType::RSP_RPC,onRpcResponse);
+    dispatcher->registerHandler<MRPC::TopicResponse>(MRPC::MType::RSP_TOPIC,onTopicResponse);
     //注册消息类型和回调之间的映射关系
 
     auto client = MRPC::ClientFactory::create("127.0.0.1",9000);
