@@ -3,7 +3,7 @@
 #include "../dispatcher.hpp"
 
 void onRpcRequest(const MRPC::BaseConnection::ptr &conn,const MRPC::BaseMessage::ptr &msg){
-    std::cout << "onMessage" << std::endl;
+    std::cout << "收到了RPC请求" << std::endl;
     std::cout << msg->serialize() << std::endl;
     auto rpc_req = MRPC::MessageFactory::create<MRPC::RpcResponse>();
     rpc_req->set_Id("11");
@@ -14,7 +14,7 @@ void onRpcRequest(const MRPC::BaseConnection::ptr &conn,const MRPC::BaseMessage:
 }
 
 void onTopicRequest(const MRPC::BaseConnection::ptr &conn,const MRPC::BaseMessage::ptr &msg){
-    std::cout << "onMessage" << std::endl;
+    std::cout << "收到了Topic请求" << std::endl;
     std::cout << msg->serialize() << std::endl;
     auto topic_req = MRPC::MessageFactory::create<MRPC::TopicResponse>();
     topic_req->set_Id("11");
@@ -27,8 +27,8 @@ int main(){
 
     auto dispatcher = std::make_shared<MRPC::Dispatcher>();
 
-    dispatcher->registerHandler(MRPC::MType::RSP_RPC,onRpcRequest);
-    dispatcher->registerHandler(MRPC::MType::RSP_TOPIC,onTopicRequest);
+    dispatcher->registerHandler(MRPC::MType::REQ_RPC,onRpcRequest);
+    dispatcher->registerHandler(MRPC::MType::REQ_TOPIC,onTopicRequest);
     //注册消息类型和回调之间的映射关系
     auto message_cb=std::bind(&MRPC::Dispatcher::onMessage,dispatcher.get(),
     std::placeholders::_1,std::placeholders::_2);
