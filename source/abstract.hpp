@@ -6,7 +6,7 @@
 #include <functional>
 
 namespace MRPC{
-    class BaseMessage//这个类是消息的基类，所有的消息类都继承自这个类，主要包含消息的id、类型、序列化、反序列化、校验等方法
+    class BaseMessage//消息的基类，基类中只包含id和类型，具体的序列化、反序列化、校验等方法在子类中实现
     {
         public:
             using ptr = std::shared_ptr<BaseMessage>;
@@ -21,7 +21,7 @@ namespace MRPC{
             virtual void set_MType(MType type){
                 mtype = type;
             }
-            virtual MType get_Type() const{
+            virtual MType get_MType() const{
                 return mtype;
             }
 
@@ -55,9 +55,10 @@ namespace MRPC{
         private:
     };
 
-    class BaseProtocol
+    class BaseProtocol 
     {
         public:
+            using ptr = std::shared_ptr<BaseProtocol>;  //用智能指针来管理协议对象
             virtual bool canProcessed(const BaseBuffer::ptr &buffer) const = 0;
             //用来根据缓冲区前四个字节的数据来判断是否能够进行处理，返回一个bool类型
             virtual bool onMessage (const BaseBuffer::ptr &buffer,BaseMessage::ptr &msg) = 0;
@@ -72,7 +73,7 @@ namespace MRPC{
         public:
             using ptr = std::shared_ptr<BaseConnection>;
             //用智能指针来管理通信连接对象
-            virtual ~BaseConnection();
+            //virtual ~BaseConnection();
             virtual void sendMessage(const BaseMessage::ptr &msg) = 0;
             //发送消息
             virtual void shutdown() = 0;
@@ -86,7 +87,7 @@ namespace MRPC{
     using CloseCallback = std::function<void(const BaseConnection::ptr &)>;
     //连接关闭回调函数，用于在连接关闭时进行回调
     using MessageCallback = std::function<void(const BaseConnection::ptr &,const BaseMessage::ptr &)>;
-    //消息回调函数，用于在收到消息时进行回调
+    //消息回调函数，用于在收到消息时进行回调，包含连接和消息两个参数
 
     class BaseServer//服务端抽象，设置好回调函数，启动服务器
     {
@@ -106,7 +107,7 @@ namespace MRPC{
             }
             virtual void start() = 0;
             //启动服务器
-        private:
+        protected:
             ConnectionCallback _connection_cb;
             CloseCallback _close_cb;
             MessageCallback _message_cb;
@@ -130,7 +131,7 @@ namespace MRPC{
             }
             virtual void connect() = 0;
             //连接服务器
-            virtual void sendMessage(const BaseMessage::ptr &msg) = 0;
+            virtual bool sendMessage(const BaseMessage::ptr &msg) = 0;
             //发送消息
             virtual void shutdown() = 0;
             //关闭连接
@@ -139,7 +140,7 @@ namespace MRPC{
             virtual BaseConnection::ptr getConnection() = 0;
             //获取连接
 
-        private:
+        protected:
             ConnectionCallback _connection_cb;
             CloseCallback _close_cb;
             MessageCallback _message_cb;
