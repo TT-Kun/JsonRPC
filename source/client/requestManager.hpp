@@ -20,11 +20,11 @@ namespace MRPC{
                     RequestCallback _callback;
                 };
 
-                void onResponse(const BaseMessage::ptr &msg,const BaseConnection::ptr &conn){
+                void onResponse(const BaseConnection::ptr &conn,const BaseMessage::ptr &msg){
                     std::string req_id = msg->get_Id();
                     ReqDesc::ptr req_desc = getDesc(req_id);
                     if(req_desc.get()==nullptr){
-                        ELOG("收到响应，但是未找到对应请求描述，请检查代码",req_id.c_str());
+                        ELOG("收到响应，但是未找到对应请求描述，请检查代码：%s", req_id.c_str());
                         return;
                         //因为不可能出现这个情况，只能是代码问题。
                     }
@@ -87,6 +87,8 @@ namespace MRPC{
                     if(req_type == ReqType::REQ_CALLBACK){
                         req_desc->_callback = _callback;
                     }
+                    req_desc->request = req;
+                    req_desc->req_type = req_type;
                     _request_desc.insert(std::make_pair(req->get_Id(),req_desc));
                     return req_desc;
                 }

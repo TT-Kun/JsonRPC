@@ -1,6 +1,6 @@
 #pragma once
 
-#include <requestManager.hpp>
+#include "requestManager.hpp"
 
 namespace MRPC{
     namespace client{
@@ -56,8 +56,10 @@ namespace MRPC{
 
                     std::promise<Json::Value> json_promise;
                     rsp = json_promise.get_future();
-                    RequestManager::RequestCallback cb = std::bind(&RpcCaller::Callback, 
-                        this, json_promise, std::placeholders::_1);
+                    // 使用lambda表达式代替std::bind，避免std::promise无法拷贝的问题
+                    RequestManager::RequestCallback cb = [this, &json_promise](const BaseMessage::ptr &msg) {
+                        this->Callback(json_promise, msg);
+                    };
                     //2.发送请求
                     bool ret = _req_manager->send(conn,req_msg,cb);
                     if(!ret){
@@ -76,9 +78,12 @@ namespace MRPC{
                     req_msg->setMethod(method);
                     req_msg->setParams(params);
 
-                    RequestManager::RequestCallback req_cb = std::bind(&RpcCaller::Callback1, 
-                        this, cb, std::placeholders::_1);
-                    bool ret = _req_manager->send(conn, std::dynamic_pointer_cast<BaseMessage>(req_msg), req_cb);
+                    // 使用lambda表达式代替std::bind
+                    RequestManager::RequestCallback req_cb = [this, cb](const BaseMessage::ptr &msg) {
+                        this->Callback1(cb, msg);
+                    };
+                    
+                    bool ret = _req_manager->send(conn, req_msg, req_cb);
                     if (ret == false) {
                         ELOG("回调Rpc请求失败！");
                         return false;
@@ -93,7 +98,7 @@ namespace MRPC{
                         return ;
                     }
                     if (rpc_rsp_msg->getRcode() != RCode::RCODE_OK) {
-                        ELOG("rpc回调请求出错：%s", error_msg(rpc_rsp_msg->getRcode()));
+                        ELOG("rpc回调请求出错：%s", error_msg(rpc_rsp_msg->getRcode()).c_str());
                         return ;
                     }
                     cb(rpc_rsp_msg->getResult());

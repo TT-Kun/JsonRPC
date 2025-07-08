@@ -29,11 +29,11 @@ namespace MRPC{
                 {
                     for(auto &param : _params){
                         if(params.isMember(param.first)==false){
-                            ELOG("参数校验失败，缺少参数：{}",param.first);
+                            ELOG("参数校验失败，缺少参数：%s", param.first.c_str());
                             return false;
                         }
                         if(check(params[param.first],param.second)==false){
-                            ELOG("参数校验失败，参数类型不匹配：{}",param.first);
+                            ELOG("参数校验失败，参数类型不匹配：%s", param.first.c_str());
                             return false;
                         }
                     }
@@ -49,7 +49,6 @@ namespace MRPC{
                 }
 
                 bool call(const Json::Value &params,Json::Value &result){
-                    Json::Value result;
                     _callback(params,result);
                     if(returnTypeCheck(result)==false){
                         ELOG("返回值类型校验失败");
@@ -143,11 +142,11 @@ namespace MRPC{
                     //判断服务端是否注册了该服务->如果注册了，进行参数校验->通过后调用服务端回调函数->组织相应，发送回客户端
                     auto service = _service_manager->selectService(request->getMethod());
                     if(service.get()==nullptr){
-                        ELOG("未找到对应的服务，方法名：{}",request->getMethod().c_str());
+                        ELOG("未找到对应的服务，方法名：%s", request->getMethod().c_str());
                         return response(conn,request,Json::Value(),RCode::RCODE_NOT_FOUND_SERVICE);
                     }
                     if(service->paramCheck(request->getParams())==false){
-                        ELOG("参数校验失败，方法名：{}",request->getMethod().c_str());
+                        ELOG("参数校验失败，方法名：%s", request->getMethod().c_str());
                         return response(conn,request,Json::Value(),RCode::RCODE_INVALID_PARAMS);
                     }
 
@@ -155,10 +154,12 @@ namespace MRPC{
                     service->call(request->getParams(),result);
                     bool ret = service->returnTypeCheck(result);
                     if(ret==false){
-                        ELOG("返回值类型校验失败，方法名：{}",request->getMethod().c_str());
+                        ELOG("返回值类型校验失败，方法名：%s", request->getMethod().c_str());
                         return response(conn,request,Json::Value(),RCode::RCODE_INTERNAL_ERROR);
-
                     }
+                    
+                    // 调用成功后发送响应
+                    response(conn,request,result,RCode::RCODE_OK);
                 }
                 void registerService(const ServDiscribe::ptr &service)
                 {
