@@ -1,3 +1,4 @@
+/*用于测试common下的net.hpp、message.hpp、dispatcher.hpp*/
 #include "../common/net.hpp"
 #include "../common/message.hpp"
 #include "../common/dispatcher.hpp"

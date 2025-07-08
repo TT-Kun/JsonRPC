@@ -40,6 +40,7 @@ namespace MRPC{
         RCODE_NOT_FOUND_SERVICE,   // RPC服务不存在
         RCODE_INVALID_OPTYPE,      // 无效的Topic操作类型
         RCODE_NOT_FOUND_TOPIC,     // 主题不存在
+        RCODE_INTERNAL_ERROR,      // 内部错误
     };
     //以上是响应码
 
