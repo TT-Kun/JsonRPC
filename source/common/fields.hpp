@@ -65,7 +65,7 @@ namespace MRPC{
     //以上是错误原因的映射
 
 
-    enum class RpcType{
+    enum class ReqType{
         REQ_SYNC = 0,       // 同步请求
         REQ_ASYNC,          // 异步请求
         REQ_CALLBACK,       // 回调请求
