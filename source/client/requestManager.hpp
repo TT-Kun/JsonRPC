@@ -11,7 +11,7 @@ namespace MRPC{
             public:
                 using RequestCallback = std::function<void(BaseMessage::ptr)>;
                 using AsyncResponse = std::future<BaseMessage::ptr>;
-                
+                using ptr = std::shared_ptr<RequestManager>;
                 struct ReqDesc{
                     using ptr = std::shared_ptr<ReqDesc>;
                     BaseMessage::ptr request;
@@ -42,6 +42,7 @@ namespace MRPC{
                         ELOG("收到未知类型响应，检查代码");
                         return;
                     }
+                    delDesc(req_id);//一定要记得删除！不然会造成内存泄漏
                 }
 
                 bool send(const BaseConnection::ptr &conn,const BaseMessage::ptr &req,AsyncResponse &async_rsp){
@@ -51,7 +52,8 @@ namespace MRPC{
                         ELOG("创建请求描述失败，请检查代码和内存");
                         return false;
                     }
-                    conn->sendMessage(req_desc->request);
+                    // conn->sendMessage(req_desc->request);
+                    conn->sendMessage(req);
                     async_rsp = req_desc->response.get_future();//获取异步响应
                     return true;
                 }
@@ -67,15 +69,15 @@ namespace MRPC{
                 }
 
 
-                void send(const BaseConnection::ptr &conn,const BaseMessage::ptr &req,RequestCallback &callback){
+                bool send(const BaseConnection::ptr &conn,const BaseMessage::ptr &req,RequestCallback &callback){
                     //同步
                     ReqDesc::ptr req_desc = newDesc(req,ReqType::REQ_CALLBACK,callback);
                     if(req_desc.get()==nullptr){
                         ELOG("创建请求描述失败，请检查代码和内存");
-                        return;
+                        return false;
                     }
                     conn->sendMessage(req_desc->request);
-                    return;
+                    return true;
                 }
 
             private:
